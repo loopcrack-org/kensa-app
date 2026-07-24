@@ -13,7 +13,7 @@ is developed in a private repository.
 
 ## Download
 
-Grab the latest version from the **[Releases page](https://github.com/loopcrack-org/kensa-releases/releases/latest)**:
+Grab the latest version from the **[Releases page](https://github.com/loopcrack-org/kensa-app/releases/latest)**:
 
 | Platform | File | Notes |
 | --- | --- | --- |
