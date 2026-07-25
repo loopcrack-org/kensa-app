@@ -1,3 +1,5 @@
+<img src="assets/icon.png" width="96" alt="Kensa" />
+
 # Kensa
 
 **AI-powered pull-request review, on your desktop.**
