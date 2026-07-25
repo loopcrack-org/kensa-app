@@ -2,7 +2,7 @@
 
 All notable end-user changes to Kensa are documented here.
 
-## Unreleased — v0.1.14
+## v0.1.14 — 2026-07-24
 
 - First signed & notarized macOS build (Developer ID + Apple notarization);
   no more `xattr` workaround on install.
