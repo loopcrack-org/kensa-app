@@ -1,0 +1,17 @@
+# A blank issue gives us nothing to act on and gives the reporter no idea what
+# we need, so the one template below is the only way in from here. It is not a
+# gate: everything it asks for except the first field is optional.
+blank_issues_enabled: false
+
+contact_links:
+  - name: 🔒 Report a security vulnerability (privately)
+    url: https://github.com/loopcrack-org/kensa-app/security/advisories/new
+    about: Never file a vulnerability as a public issue — it is readable and indexed the moment it exists, and deleting it does not recall it.
+
+  - name: 💬 Report a problem without a GitHub account
+    url: https://kensa.ai/report
+    about: No sign-in needed. One catch worth knowing - the issue is filed under our account, so you will not be notified of replies. Save the link it gives you.
+
+  - name: 📖 What belongs in this tracker
+    url: https://github.com/loopcrack-org/kensa-app/blob/main/CONTRIBUTING.md
+    about: Things that are broken. Ideas, questions and support requests are closed with a reason - there is nobody watching a channel for them.
