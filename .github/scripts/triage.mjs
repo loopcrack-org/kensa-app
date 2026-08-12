@@ -137,6 +137,9 @@ async function classify(key, title, body) {
 
 export /** Opens every block we write, and is how a rerun finds the one it left. */
 const BLOCK_MARKER = '<!-- kensa-triage-summary -->'
+/** Closes it. A dedicated comment rather than `---`, which prose can contain. */
+const CLOSE_MARKER = '<!-- /kensa-triage-summary -->'
+const BLOCK_END = `\n${CLOSE_MARKER}\n\n---\n\n`
 
 /**
  * Strip a block this script wrote previously.
@@ -148,10 +151,13 @@ const BLOCK_MARKER = '<!-- kensa-triage-summary -->'
  * because every line of theirs is quoted.
  */
 export function withoutPreviousBlock(body) {
-  const start = body.indexOf(BLOCK_MARKER)
-  if (start === -1) return body
-  const divider = body.indexOf('\n\n---\n\n', start)
-  return divider === -1 ? body : body.slice(divider + 7)
+  /* Anchored at offset ZERO, because we always prepend. Searching anywhere was
+     data loss waiting to happen: a reporter can write the marker inside their
+     own text — quoted, but `indexOf` does not care — and everything before the
+     match would then have been discarded, which is their entire report. */
+  if (!body.startsWith(BLOCK_MARKER)) return body
+  const divider = body.indexOf(BLOCK_END)
+  return divider === -1 ? body : body.slice(divider + BLOCK_END.length)
 }
 
 export function summaryBlock(verdict, originalTitle) {
@@ -175,7 +181,11 @@ export function summaryBlock(verdict, originalTitle) {
   if (verdict.title && verdict.title !== originalTitle) {
     lines.push('', `_Retitled for the index. As submitted: “${originalTitle}”_`)
   }
-  return `${lines.join('\n')}\n\n---\n\n`
+  /* The model's prose cannot be allowed to contain the closing marker, or a
+     rerun would cut the block in the wrong place and leave half of our own
+     text sitting below the divider as if the reporter wrote it. */
+  const safe = lines.map((line) => line.split(CLOSE_MARKER).join('')).join('\n')
+  return safe + BLOCK_END
 }
 
 async function main() {

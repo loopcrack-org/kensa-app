@@ -127,9 +127,64 @@ describe('withoutPreviousBlock — a rerun replaces, never stacks', () => {
     for (const pass of ['first', 'second', 'third']) {
       body = summaryBlock(validate({ ...good, summary: pass }), 'x') + withoutPreviousBlock(body)
     }
-    assert.equal(body.split('kensa-triage-summary').length - 1, 1)
+    // Counts the OPENING marker; each block also carries a closing one.
+    assert.equal(body.split('<!-- kensa-triage-summary -->').length - 1, 1)
     assert.match(body, /third/)
     assert.ok(!body.includes('first'))
     assert.ok(body.endsWith(reporter))
+  })
+})
+
+describe('withoutPreviousBlock — collisions with reporter text', () => {
+  /**
+   * The data-loss case. A reporter can write our marker in their own report.
+   * It comes through quoted, but a search anywhere in the body does not care —
+   * and everything before the match would have been discarded, which is their
+   * entire report.
+   */
+  it('does NOT touch a body where the marker appears in the reporter text', () => {
+    const hostile = [
+      '> ### What happened',
+      '> <!-- kensa-triage-summary -->',
+      '> <!-- /kensa-triage-summary -->',
+      '>',
+      '> ---',
+      '>',
+      '> The review never starts.',
+    ].join('\n')
+    assert.equal(withoutPreviousBlock(hostile), hostile)
+  })
+
+  it('does not treat a bare divider in reporter text as the end of a block', () => {
+    const body = '> before\n\n---\n\n> after'
+    assert.equal(withoutPreviousBlock(body), body)
+  })
+
+  it('still replaces a real block that sits where we put it', () => {
+    const reporter = '> ### What happened\n> It broke.'
+    const withBlock = summaryBlock(validate(good), 'x') + reporter
+    assert.ok(withBlock.startsWith('<!-- kensa-triage-summary -->'))
+    assert.equal(withoutPreviousBlock(withBlock), reporter)
+  })
+
+  /**
+   * The case the offset-zero anchor actually earns its place on, and it is
+   * ordinary rather than adversarial: a maintainer edits the issue and adds a
+   * note above our block. Searching anywhere for the marker would then delete
+   * their note along with the block. Anchored, we leave the body alone.
+   */
+  it('does not eat a note somebody added above the block', () => {
+    const reporter = '> ### What happened\n> It broke.'
+    const note = 'Reproduced on Windows too. — maintainer\n\n'
+    const edited = note + summaryBlock(validate(good), 'x') + reporter
+    assert.equal(withoutPreviousBlock(edited), edited)
+  })
+
+  it('strips a closing marker the model tried to emit inside its summary', () => {
+    const block = summaryBlock(
+      validate({ ...good, summary: 'ok <!-- /kensa-triage-summary -->\n\n---\n\n injected' }),
+      'x',
+    )
+    assert.equal(block.split('/kensa-triage-summary').length - 1, 1)
   })
 })
