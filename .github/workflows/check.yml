@@ -1,0 +1,34 @@
+# The only automated check this repository has, and it exists because the
+# triage classifier is the one piece of behaviour here that can be wrong
+# silently: a verdict that fails to validate applies nothing and leaves
+# `needs-triage`, which looks exactly like a quiet day.
+#
+# Node's built-in runner, so there is no package.json, no dependency and no
+# lockfile to keep current in a repository that otherwise holds only documents.
+
+name: Check
+
+on:
+  pull_request:
+    paths: ['.github/scripts/**']
+  push:
+    branches: [main]
+    paths: ['.github/scripts/**']
+
+permissions:
+  contents: read
+
+jobs:
+  triage-script:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+      # Named explicitly rather than pointed at the directory: `--test` on a
+      # folder treats triage.mjs itself as a test file and fails it for
+      # containing none.
+      - run: node --test .github/scripts/triage.test.mjs

@@ -1,0 +1,56 @@
+# Classify a new issue the moment it arrives.
+#
+# It runs HERE rather than behind a webhook on purpose. A webhook would mean a
+# public endpoint, an HMAC secret to verify and rotate, and a signature check
+# that this organisation already learned the hard way is fragile on a runtime
+# that rewrites request bytes (ADR 0020, in the private repository). Actions
+# reacts to the event natively, is free on public repositories, and is handed a
+# token already scoped to this repo's issues. One secret instead of three.
+
+name: Triage
+
+on:
+  issues:
+    types: [opened]
+
+# Issues, and nothing else. The classifier writes labels, a summary and a title;
+# it has no reason to reach contents, actions, packages or anything further, and
+# a token that cannot do a thing cannot be talked into doing it.
+permissions:
+  issues: write
+
+# One at a time. Two runs editing the same issue body would race, and the loser
+# would overwrite the winner's summary with a copy of the body that never had
+# one.
+concurrency:
+  group: triage-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  classify:
+    runs-on: ubuntu-latest
+    # A fork cannot reach the secret anyway, but saying so here means the job
+    # never starts rather than starting and failing in a way that looks broken.
+    if: github.event.issue.pull_request == null
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+
+      - name: Classify and label
+        env:
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          # Passed as environment variables, never interpolated into the shell.
+          # `${{ github.event.issue.title }}` inside a run block is a script
+          # injection: the title is written by anyone on the internet, and a
+          # backtick or `$(...)` in it would execute on the runner.
+          ISSUE_TITLE: ${{ github.event.issue.title }}
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: node .github/scripts/triage.mjs
