@@ -67,7 +67,11 @@ body:
         - It works, but something is wrong
         - A visual or wording problem
     validations:
-      required: true
+      # Not required, to match kensa.ai/report where this is a radio group with
+      # a default — nobody has to actively choose there, so demanding a choice
+      # here would make this the stricter door for no reason. Left blank, triage
+      # classifies it.
+      required: false
 
   - type: dropdown
     id: role
@@ -78,7 +82,7 @@ body:
         - A person using Kensa
         - A developer
     validations:
-      required: true
+      required: false
 
   - type: input
     id: version

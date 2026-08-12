@@ -9,9 +9,10 @@ until we publish it, and you can see what we are doing about it the whole time.
 
 ## Do not use the normal channels
 
-Neither [kensa.ai/report](https://kensa.ai/report) nor a regular issue is safe
-for this. Both publish **immediately and permanently**, to everyone, before
-anyone can fix anything.
+A regular issue is not safe for this — nor is the reporting form at
+[kensa.ai/report](https://kensa.ai/report) once it is live, which it is not yet.
+Both publish **immediately and permanently**, to everyone, before anyone can fix
+anything.
 
 This is worth being blunt about, because the mistake is easy and it cannot be
 undone:

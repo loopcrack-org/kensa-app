@@ -7,17 +7,16 @@
 ## We cannot accept pull requests here
 
 Kensa's source is in a private repository. This one holds the releases and the
-issue tracker, so the only files a pull request could touch are the README and
-the changelog — and those are written by the release process, which overwrites
-them on the next release.
+issue tracker, so a pull request could only touch the README, the changelog, or
+the documentation and templates — all of which are written or regenerated from
+elsewhere and would be overwritten rather than merged.
 
 So this will be closed, with a pointer to [CONTRIBUTING.md](../CONTRIBUTING.md).
 Not out of rudeness: there is genuinely nowhere for the change to go.
 
 **If you found something broken**, that is the contribution we actually need and
 cannot produce ourselves — we only see the bugs that happen on our own machines.
-[Open an issue](https://github.com/loopcrack-org/kensa-app/issues/new/choose) or
-use [kensa.ai/report](https://kensa.ai/report).
+[Open an issue](https://github.com/loopcrack-org/kensa-app/issues/new/choose).
 
 **If you found a vulnerability**, do not describe it here — a pull request is
 public too. See [SECURITY.md](../SECURITY.md).
