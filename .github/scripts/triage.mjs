@@ -135,8 +135,28 @@ async function classify(key, title, body) {
   return validate(JSON.parse(content))
 }
 
+export /** Opens every block we write, and is how a rerun finds the one it left. */
+const BLOCK_MARKER = '<!-- kensa-triage-summary -->'
+
+/**
+ * Strip a block this script wrote previously.
+ *
+ * A rerun that simply prepended would stack a second summary AND swallow the
+ * first into what the divider calls the reporter's verbatim text — turning our
+ * own machine-written prose into something the issue claims a human wrote.
+ * Anchored to a marker on its own line, which reporter text cannot produce
+ * because every line of theirs is quoted.
+ */
+export function withoutPreviousBlock(body) {
+  const start = body.indexOf(BLOCK_MARKER)
+  if (start === -1) return body
+  const divider = body.indexOf('\n\n---\n\n', start)
+  return divider === -1 ? body : body.slice(divider + 7)
+}
+
 export function summaryBlock(verdict, originalTitle) {
   const lines = [
+    BLOCK_MARKER,
     '> [!NOTE]',
     '> **Triage summary — written by the classifier, not by the reporter.**',
     '> Everything below the divider is the reporter, quoted verbatim.',
@@ -223,7 +243,7 @@ async function main() {
 
   await api(`/issues/${number}`, 'PATCH', {
     title: verdict.title || title,
-    body: summaryBlock(verdict, title) + (issue.body ?? ''),
+    body: summaryBlock(verdict, title) + withoutPreviousBlock(issue.body ?? ''),
   })
 
   console.log(`Triaged #${number}: ${[...add].join(', ')}`)

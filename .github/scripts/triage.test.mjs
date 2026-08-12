@@ -14,7 +14,7 @@
 
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { summaryBlock, validate } from './triage.mjs'
+import { summaryBlock, validate, withoutPreviousBlock } from './triage.mjs'
 
 const good = {
   impact: 'impact:blocked',
@@ -101,5 +101,35 @@ describe('summaryBlock — attribution is the whole point', () => {
   it('marks a thin report, and names why it cannot be chased', () => {
     const text = summaryBlock(validate({ ...good, thin: true }), 'x')
     assert.match(text, /anonymous they cannot be asked for more/)
+  })
+})
+
+describe('withoutPreviousBlock — a rerun replaces, never stacks', () => {
+  const reporter = '> ### What happened\n> It broke.'
+
+  it('leaves a body we have never touched alone', () => {
+    assert.equal(withoutPreviousBlock(reporter), reporter)
+  })
+
+  /**
+   * The failure this prevents is worse than a duplicate. Prepending a second
+   * block pushes the FIRST one below the divider — into the region the issue
+   * declares is the reporter's verbatim words. Our own machine-written prose
+   * would then be presented as something a human wrote.
+   */
+  it('removes a block it wrote before, leaving only the reporter', () => {
+    const once = summaryBlock(validate({ ...good, summary: 'first pass' }), 'x') + reporter
+    assert.equal(withoutPreviousBlock(once), reporter)
+  })
+
+  it('does not stack on repeated runs', () => {
+    let body = reporter
+    for (const pass of ['first', 'second', 'third']) {
+      body = summaryBlock(validate({ ...good, summary: pass }), 'x') + withoutPreviousBlock(body)
+    }
+    assert.equal(body.split('kensa-triage-summary').length - 1, 1)
+    assert.match(body, /third/)
+    assert.ok(!body.includes('first'))
+    assert.ok(body.endsWith(reporter))
   })
 })
