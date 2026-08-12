@@ -1,0 +1,94 @@
+name: Something is broken
+description: Report a problem with Kensa — the desktop app, the website, installing, or signing in.
+title: "[problem] "
+labels: ["needs-triage", "reporter:github"]
+body:
+  - type: markdown
+    attributes:
+      # Above the fields, not below the button. Someone who has already pasted a
+      # log has already published it.
+      value: |
+        **This becomes a public issue.** Anyone on the internet can read it, and search engines index it.
+
+        Do not paste tokens, API keys, private repository names, or customer data. Describe the problem instead.
+
+        **Found a security vulnerability?** [Report it privately](https://github.com/loopcrack-org/kensa-app/security/advisories/new) — never here.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: In your own words. A rough description is genuinely useful — send it even if you cannot answer anything below.
+      placeholder: |
+        I clicked "Start Review" on a pull request and the spinner never stopped. Nothing appeared in the findings panel, even after ten minutes.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect instead?
+      description: Sometimes the gap between these two is the whole bug.
+      placeholder: |
+        I expected it to list the findings after a minute or two, like it usually does.
+    validations:
+      required: false
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: How can we make it happen?
+      description: Numbered steps if you can. If you cannot reproduce it on purpose, say so — that is information too.
+      placeholder: |
+        1. Open any pull request
+        2. Click "Start Review"
+        3. Wait — the spinner never resolves
+
+        Happens every time on my machine.
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs or error messages
+      description: Pasted here, this is automatically formatted as code — no backticks needed. Check it for tokens before you paste.
+      render: text
+    validations:
+      required: false
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: How much of Kensa still works?
+      description: A fact about your situation, not a priority. Priority is computed from this — we never ask for it.
+      options:
+        - I cannot use Kensa at all
+        - It works, but something is wrong
+        - A visual or wording problem
+    validations:
+      # Not required, to match kensa.ai/report where this is a radio group with
+      # a default — nobody has to actively choose there, so demanding a choice
+      # here would make this the stricter door for no reason. Left blank, triage
+      # classifies it.
+      required: false
+
+  - type: dropdown
+    id: role
+    attributes:
+      label: How would you describe yourself?
+      description: Recorded as `claimed:*` — a hint about how to read your report, never treated as evidence of anything.
+      options:
+        - A person using Kensa
+        - A developer
+    validations:
+      required: false
+
+  - type: input
+    id: version
+    attributes:
+      label: Kensa version
+      description: Settings → About, or the installer filename. Skip it if you cannot find it.
+      placeholder: "0.1.15"
+    validations:
+      required: false
