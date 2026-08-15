@@ -100,6 +100,26 @@ export function validate(parsed) {
   }
 }
 
+/**
+ * Strip a markdown code fence the model wrapped its JSON in.
+ *
+ * `response_format: { type: 'json_object' }` is a request, not a guarantee, and
+ * through OpenRouter it is a request made of whichever provider answered. The
+ * first live run returned ```json\n{…}\n``` and `JSON.parse` died on the
+ * backticks — the classifier failed closed and left `needs-triage`, which is
+ * correct behaviour and completely silent. Only opening a real issue found it.
+ *
+ * Deliberately narrow: it removes a fence that WRAPS the whole payload and does
+ * nothing else. Anything more clever would be a parser guessing at malformed
+ * output, and a guess that succeeds is worse here than a failure that stops.
+ */
+export function unfence(text) {
+  const trimmed = text.trim()
+  if (!trimmed.startsWith('```')) return trimmed
+  const withoutOpen = trimmed.replace(/^```[a-zA-Z]*[ \t]*\r?\n?/, '')
+  return withoutOpen.replace(/\r?\n?```$/, '').trim()
+}
+
 async function classify(key, title, body) {
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
@@ -132,7 +152,7 @@ async function classify(key, title, body) {
   const payload = await response.json()
   const content = payload?.choices?.[0]?.message?.content
   if (typeof content !== 'string') throw new Error('no content')
-  return validate(JSON.parse(content))
+  return validate(JSON.parse(unfence(content)))
 }
 
 export /** Opens every block we write, and is how a rerun finds the one it left. */
