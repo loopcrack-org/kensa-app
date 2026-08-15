@@ -223,4 +223,27 @@ describe('unfence — the failure a live issue found and no unit test would have
   it('does not turn malformed output into something parseable', () => {
     assert.throws(() => JSON.parse(unfence('```json\nnot json at all\n```')))
   })
+
+  /**
+   * A lone opening fence means the output is truncated or malformed, not
+   * wrapped. Stripping it would be the function overreaching in exactly the way
+   * its own comment forbids — quietly making broken output parseable is how a
+   * plausible wrong classification reaches a public issue.
+   */
+  it('leaves text alone when the closing fence is missing', () => {
+    const truncated = '```json\n' + payload
+    assert.equal(unfence(truncated), truncated)
+  })
+
+  /**
+   * Asserts the PROPERTY, not the return value. An empty fence yields an empty
+   * string rather than the input, and that is fine — what must hold is that
+   * nothing degenerate becomes parseable, because a parseable result gets
+   * applied to a public issue while a throw leaves needs-triage for a human.
+   */
+  it('never makes a degenerate fence parseable', () => {
+    for (const degenerate of ['```', '``````', '```json\n```', '```\n\n```']) {
+      assert.throws(() => JSON.parse(unfence(degenerate)), SyntaxError)
+    }
+  })
 })
