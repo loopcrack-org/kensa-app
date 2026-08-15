@@ -14,7 +14,7 @@
 
 import assert from 'node:assert/strict'
 import { describe, it } from 'node:test'
-import { summaryBlock, validate, withoutPreviousBlock } from './triage.mjs'
+import { summaryBlock, unfence, validate, withoutPreviousBlock } from './triage.mjs'
 
 const good = {
   impact: 'impact:blocked',
@@ -186,5 +186,41 @@ describe('withoutPreviousBlock — collisions with reporter text', () => {
       'x',
     )
     assert.equal(block.split('/kensa-triage-summary').length - 1, 1)
+  })
+})
+
+describe('unfence — the failure a live issue found and no unit test would have', () => {
+  const payload = '{"impact":"impact:blocked","summary":"it broke"}'
+
+  it('parses a plain JSON response untouched', () => {
+    assert.equal(unfence(payload), payload)
+    assert.deepEqual(JSON.parse(unfence(payload)), JSON.parse(payload))
+  })
+
+  /**
+   * The exact shape that broke the first production run.
+   * `response_format: json_object` is a request, not a guarantee — and through
+   * OpenRouter it is a request made of whichever provider answered.
+   */
+  it('strips a ```json fence', () => {
+    assert.deepEqual(JSON.parse(unfence('```json\n' + payload + '\n```')), JSON.parse(payload))
+  })
+
+  it('strips a bare ``` fence, and tolerates surrounding whitespace', () => {
+    assert.deepEqual(JSON.parse(unfence('\n  ```\n' + payload + '\n```  \n')), JSON.parse(payload))
+  })
+
+  /**
+   * Narrow on purpose. A fence INSIDE the payload is not ours to remove, and a
+   * parser that starts guessing at malformed output produces a plausible wrong
+   * answer — worse here than a failure that stops and leaves needs-triage.
+   */
+  it('leaves a fence that does not wrap the whole payload alone', () => {
+    const inner = '{"summary":"the log said ```text hello```"}'
+    assert.equal(unfence(inner), inner)
+  })
+
+  it('does not turn malformed output into something parseable', () => {
+    assert.throws(() => JSON.parse(unfence('```json\nnot json at all\n```')))
   })
 })
