@@ -115,8 +115,21 @@ export function validate(parsed) {
  */
 export function unfence(text) {
   const trimmed = text.trim()
+  /* BOTH fences or neither. Stripping a lone opening fence would be this
+     function overreaching in exactly the way its own comment forbids: the text
+     is then not "a payload that was wrapped", it is truncated or malformed
+     output, and quietly making it parseable is how a plausible wrong
+     classification reaches a public issue. Without a closing fence it goes
+     through untouched, JSON.parse throws, and the issue keeps needs-triage. */
   if (!trimmed.startsWith('```')) return trimmed
   const withoutOpen = trimmed.replace(/^```[a-zA-Z]*[ \t]*\r?\n?/, '')
+  /* BOTH fences or neither, checked AFTER the opener is removed so a string
+     that is only a fence cannot satisfy it twice with the same backticks.
+     A lone opening fence means the output is truncated, not wrapped, and
+     quietly making truncated output parseable is how a plausible wrong
+     classification reaches a public issue. Left alone, JSON.parse throws and
+     the issue keeps needs-triage for a human. */
+  if (!withoutOpen.endsWith('```')) return trimmed
   return withoutOpen.replace(/\r?\n?```$/, '').trim()
 }
 
